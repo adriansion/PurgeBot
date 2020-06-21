@@ -1,15 +1,14 @@
+import org.javacord.api.entity.channel.ServerTextChannel;
+import org.javacord.api.event.message.MessageCreateEvent;
+import org.javacord.api.listener.message.MessageCreateListener;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-
-import org.javacord.api.entity.channel.ServerTextChannel;
-import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageSet;
-import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.listener.message.MessageCreateListener;
 
 /**
  * Listens for messages sent to any text channel in the server, and acts when
@@ -26,6 +25,8 @@ import org.javacord.api.listener.message.MessageCreateListener;
  */
 public class CommandListener implements MessageCreateListener {
 
+    private static final Logger logger = LogManager.getLogger(CommandListener.class);
+
     public CommandListener() {
     }
 
@@ -39,8 +40,7 @@ public class CommandListener implements MessageCreateListener {
             Purger purger = new Purger();
 
             // Logs purge command usage.
-            Main.logger.info(
-                    commandSender + " invoked \"!purge\" on " + user + " in " + event.getServer().get().getName());
+            logger.info(commandSender + " invoked \"!purge\" on " + user + " in " + event.getServer().get().getName());
 
             // The instant at which the user being purged joined the server.
             Instant i = (event.getServer().get().getMemberByDiscriminatedName(user).get()
@@ -55,7 +55,7 @@ public class CommandListener implements MessageCreateListener {
             if (args.length == 3) {
                 if (args[2].equalsIgnoreCase("all")) {
                     channelsToPurge = event.getServer().get().getTextChannels();
-                    Main.logger.info("Purge command to be invoked across all channels.");
+                    logger.info("Purge command to be invoked across all channels.");
                 }
             } else {
                 channelsToPurge.add(event.getServerTextChannel().get());
@@ -67,7 +67,7 @@ public class CommandListener implements MessageCreateListener {
                 CompletableFuture<Void> purge = purger.channelPurgeB(c, user, i);
 
                 // Logs deletion completion.
-                purge.thenAccept((del) -> Main.logger.info(user + " successfully purged in " + c.getName() + "."));
+                purge.thenAccept((del) -> logger.info(user + " successfully purged in " + c.getName() + "."));
             }
         }
     }
