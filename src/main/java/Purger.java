@@ -5,7 +5,9 @@ import org.javacord.api.entity.message.MessageSet;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.lang.reflect.Array;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -74,45 +76,70 @@ public class Purger {
     public CompletableFuture<Void> channelPurgeB(ServerTextChannel c, String user, Instant i) {
 
         MessageSet allMessages;
-        Stack<ArrayList<Message>> messageArrays = new Stack<ArrayList<Message>>();
-        messageArrays.push(new ArrayList<Message>());
-        int userMessageCount = 0, counter = 0, MAXARRAYSIZE = 10;
+        ArrayList<Message> ym = new ArrayList<>(), om = new ArrayList<>();
+        Stack<ArrayList<Message>> messageArrays = new Stack<>(), ya = new Stack<>(), oa = new Stack<>();
+        messageArrays.push(new ArrayList<>());
+        ya.push(new ArrayList<>());
+        oa.push(new ArrayList<>());
+        int userMessageCount = 0, MAXARRAYSIZE = 10;
+        boolean added;
 
         try {
 
             // Collects all messages sent to the channel since user joined server.
             allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(i) > 0).get();
-            logger.info(allMessages.size() + " messages found since user join instant in " + c.getName() + ".");
+            logger.info(allMessages.size() + " total messages found since user join instant in " + c.getName() + ".");
+
+            Instant twoWeeksPrior = Instant.now().minus(27, ChronoUnit.HALF_DAYS);
 
             // Examines each message and keeps those whose author is the user.
             for (Message m : allMessages) {
                 if (m.getAuthor().getDiscriminatedName().equals(user)) {
-                    if (counter < MAXARRAYSIZE) {
-                        messageArrays.peek().add(m);
-                        counter++;
-                    } else {
 
-                        messageArrays.push(new ArrayList<Message>());
-                        messageArrays.peek().add(m);
-
-                        counter = 1;
-                    }
+                    added = m.getCreationTimestamp().isAfter(twoWeeksPrior) ? ym.add(m) : om.add(m);
                     userMessageCount++;
                 }
             }
-
-            logger.info(
-                    userMessageCount + " messages found from user since user join instant in " + c.getName() + ".");
-
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException |
+                ExecutionException e) {
             e.printStackTrace();
-
         }
 
+        logger.info(userMessageCount + " messages found from user since user join instant in " + c.getName() + ".");
+
+        // Distributes young messages to young message arrays.
+        for (Message m : ym) {
+            if (ya.peek().size() < 100) {
+                ya.peek().add(m);
+            } else {
+                ya.push(new ArrayList<>());
+                ya.peek().add(m);
+            }
+        }
+
+        // Distributes old messages to old message arrays.
+        for (Message m : om) {
+            if (oa.peek().size() < MAXARRAYSIZE) {
+                oa.peek().add(m);
+            } else {
+                oa.push(new ArrayList<>());
+                oa.peek().add(m);
+            }
+        }
+
+
         // Deletes applicable messages from channel.
-        return CompletableFuture.runAsync(() -> {
-            for (ArrayList<Message> a : messageArrays) {
-                c.deleteMessages(a).thenAccept((del) -> logger.info(a.size() + " Messages deleted"));
+        return CompletableFuture.runAsync(() ->
+
+        {
+            // Deletes young messages
+            for (ArrayList<Message> a : ya) {
+                c.bulkDelete(a).thenAccept((del) -> logger.info("Deletion count: " + a.size() + " (bulk)"));
+            }
+
+            // Deletes old messages
+            for (ArrayList<Message> a : oa) {
+                c.deleteMessages(a).thenAccept((del) -> logger.info("Deletion count: " + a.size()));
             }
         });
     }

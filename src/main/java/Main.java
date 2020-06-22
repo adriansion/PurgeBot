@@ -11,14 +11,12 @@ public class Main {
     public static void main(String[] args) {
         logger.info("Attempting to enter application...");
 
-        String token = "NzIxMTU3MzgyMzM5NjkwNTg2.Xu-pTg.X1A_VdaioIOKfgo91OOyCMockS0";
+        String token = "token";
         DiscordApi bot = new DiscordApiBuilder().setToken(token).login().join();
 
         logger.info("Entered application successfully.");
 
         bot.addMessageCreateListener(new CommandListener());
-
-        logger.info("Now listening for commands.");
     }
 
 }

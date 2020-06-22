@@ -63,11 +63,23 @@ public class CommandListener implements MessageCreateListener {
 
             // Commits message purge on specified text channel(s).
             for (ServerTextChannel c : channelsToPurge) {
-//				CompletableFuture<Void> purge = this.channelPurgeB(c, user, i);
                 CompletableFuture<Void> purge = purger.channelPurgeB(c, user, i);
 
                 // Logs deletion completion.
                 purge.thenAccept((del) -> logger.info(user + " successfully purged in " + c.getName() + "."));
+            }
+        } else if (event.getMessageContent().startsWith("!fill")) {
+            Thread thread = new Thread();
+            for (int i = 0; i < 25; i++) {
+//                for (int j = 0; j < 5; j++) {
+                    try {
+
+                        thread.sleep(750);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    event.getChannel().sendMessage(Integer.toString(i));
+//                }
             }
         }
     }
