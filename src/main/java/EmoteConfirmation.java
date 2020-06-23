@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class EmoteConfirmation {
 
-    private final static Logger logger = LogManager.getLogger(EmoteConfirmation.class);
+    private final static Logger logger = LogManager.getLogger("Confirmation");
 
     private String sender, user, confirmationNumber;
     private Instant i;
@@ -27,7 +27,7 @@ public class EmoteConfirmation {
 
     public void poseConfirmation(ServerTextChannel channel, String sender, String user, Instant i, List<ServerTextChannel> channelsToPurge) {
 
-        logger.info("[CONFIRMATION] Initializing confirmation message in " + this.channel.getName() + ".");
+        logger.info("Initializing confirmation message in " + this.channel.getName() + ".");
 
         this.sender = sender;
         this.user = user;
@@ -46,7 +46,7 @@ public class EmoteConfirmation {
                 + user + "**?\n\n**Note**: this confirmation message will automatically"
                 + " delete in **15** seconds.\n\n*Confirmation number: " + confirmationNumber + "*");
 
-        logger.info("[CONFIRMATION] Sent confirmation message in " + this.channel.getName() + ".");
+        logger.info("Sent confirmation message in " + this.channel.getName() + ".");
     }
 
     private static class confirmationMessageListener implements MessageCreateListener {
@@ -71,7 +71,7 @@ public class EmoteConfirmation {
                 public void run() {
                     CompletableFuture<Void> messageExpiryDeletion = event.getMessage().get().delete();
                     messageExpiryDeletion.thenAccept((del) -> {
-                            logger.info("[CONFIRMATION] Automatically deleted confirmation message in " + channel.getName() + ".");
+                            logger.info("Automatically deleted confirmation message in " + channel.getName() + ".");
                     });
                 }
             };
@@ -83,7 +83,7 @@ public class EmoteConfirmation {
                     // Confirmation message contains unique confirmation number
 
                     if (event.getUser().getDiscriminatedName().equals("Purge#0337") && event.getReaction().get().getEmoji().equalsEmoji("❎")) {
-                        logger.info("[CONFIRMATION] Allowing sender 15 seconds to confirm deletion process in " + channel.getName() + ".");
+                        logger.info("Allowing sender 15 seconds to confirm deletion process in " + channel.getName() + ".");
                         timer.schedule(task, 15000);
                     }
 
@@ -92,17 +92,17 @@ public class EmoteConfirmation {
 
                         if (event.getReaction().get().getEmoji().equalsEmoji("✅")) {
                             // Confirmation is affirmative
-                            logger.info("[CONFIRMATION] Verification complete. Beginning deletion process...");
+                            logger.info("Verification complete. Beginning deletion process...");
                             Purger purger = new Purger();
                             purger.preliminaryPurgeSequence(user, i, channelsToPurge);
 
                             event.getMessage().get().delete();
-                            logger.info("[CONFIRMATION] Deletion process complete.");
+                            logger.info("Deletion process complete.");
 
                         } else if (event.getReaction().get().getEmoji().equalsEmoji("❎")) {
                             // Confirmation is negative
                             event.getMessage().get().delete();
-                            logger.info("[CONFIRMATION] Sender rejected confirmation. Deletion process aborted.");
+                            logger.info("Sender rejected confirmation. Deletion process aborted.");
                         }
                     }
                 }

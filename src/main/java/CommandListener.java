@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CommandListener implements MessageCreateListener {
 
-    private static final Logger logger = LogManager.getLogger(CommandListener.class);
+    private static final Logger logger = LogManager.getLogger("Command");
 
     public CommandListener() {
     }
@@ -40,7 +40,7 @@ public class CommandListener implements MessageCreateListener {
             Purger purger = new Purger();
 
             // Logs purge command usage.
-            logger.info("[COMMAND] Sender: " + commandSender + " User: " + user +
+            logger.info("Sender: " + commandSender + " User: " + user +
                     " Channel: " + event.getServerTextChannel().get().getName());
 
             // The instant at which the user being purged joined the server.
@@ -56,7 +56,7 @@ public class CommandListener implements MessageCreateListener {
             if (args.length == 3) {
                 if (args[2].equalsIgnoreCase("all")) {
                     channelsToPurge = event.getServer().get().getTextChannels();
-                    logger.info("[COMMAND] Purge command invoked across all channels.");
+                    logger.info("Purge command invoked across all channels.");
                 }
             } else {
                 channelsToPurge.add(event.getServerTextChannel().get());
