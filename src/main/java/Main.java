@@ -4,6 +4,8 @@ import org.javacord.api.DiscordApiBuilder;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.util.concurrent.CompletionException;
+
 public class Main {
 
     private static final Logger logger = LogManager.getLogger("Main");
@@ -12,11 +14,15 @@ public class Main {
         logger.info("Attempting to enter application...");
 
         String token = "token";
-        DiscordApi bot = new DiscordApiBuilder().setToken(token).login().join();
+        try {
+            DiscordApi bot = new DiscordApiBuilder().setToken(token).login().join();
 
-        logger.info("Entered application successfully.");
+            logger.info("Entered application successfully.");
 
-        bot.addMessageCreateListener(new CommandListener());
+            bot.addMessageCreateListener(new CommandListener());
+        } catch (IllegalStateException | CompletionException e) {
+            logger.error("Invalid token. Was it removed for a commit?");
+        }
     }
 
 }

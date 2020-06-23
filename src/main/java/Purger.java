@@ -67,8 +67,7 @@ public class Purger {
                     userMessageCount++;
                 }
             }
-        } catch (InterruptedException |
-                ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
