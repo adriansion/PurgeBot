@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 public class Purger {
 
-    private final static Logger logger = LogManager.getLogger("Purger");
+    private static final Logger logger = LogManager.getLogger("Purger");
 
     public Purger() {
     }
@@ -32,8 +32,7 @@ public class Purger {
     }
 
     /**
-     * Version B of channelPurge method: assorts user messages into specified
-     * ArrayLists and deletes from each individual list sequentially.
+     * Assorts user messages into specified ArrayLists and deletes from each individual list sequentially.
      *
      * @param c    ServerTextChannel
      * @param user Discriminated username of user being purged

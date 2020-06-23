@@ -13,9 +13,11 @@ import java.util.List;
 /**
  * Listens for messages sent to any text channel in the server, and acts when
  * the purge command is identified.
+ * <p>
  * Command usage: "!purge <Discriminated Name> [all]"
  * Optional: [all] - Purges messages across all server channels. Restricted to
  * working channel if omitted.
+ * <p>
  * For example, "!purge shiggydiggy#8455 all"
  *
  * @author Adrian
@@ -24,6 +26,7 @@ public class CommandListener implements MessageCreateListener {
 
     private static final Logger logger = LogManager.getLogger("Command");
 
+    @Override
     public void onMessageCreate(MessageCreateEvent event) {
 
         if (event.getMessage().getAuthor().canManageServer()) {
@@ -64,7 +67,8 @@ public class CommandListener implements MessageCreateListener {
                     }
 
                     // Requests confirmation from sender
-                    Confirmation confirmation = new Confirmation(channel);
+                    Confirmation confirmation = Confirmation.getInstance();
+                    confirmation.setChannel(channel);
                     confirmation.poseConfirmation(channel, sender, user, instant, channelsToPurge);
 
                 } else if (command.startsWith("!fill")) {

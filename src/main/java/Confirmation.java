@@ -7,20 +7,29 @@ import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.listener.message.reaction.ReactionAddListener;
 
 import java.time.Instant;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class Confirmation {
 
-    private final static Logger logger = LogManager.getLogger("Confirmation");
+    private static Confirmation instance = new Confirmation();
+
+    private static final Logger logger = LogManager.getLogger("Confirmation");
 
     private String sender, user, confirmationNumber;
     private Instant i;
-    //    private ArrayList<ServerTextChannel> channelsToPurge;
     private List<ServerTextChannel> channelsToPurge;
     private ServerTextChannel channel;
 
-    public Confirmation(ServerTextChannel channel) {
+    private Confirmation() {
+    }
+
+    public static Confirmation getInstance() {
+        return instance;
+    }
+
+    public void setChannel(ServerTextChannel channel) {
         this.channel = channel;
     }
 
@@ -70,7 +79,7 @@ public class Confirmation {
                 public void run() {
                     CompletableFuture<Void> messageExpiryDeletion = event.getMessage().get().delete();
                     messageExpiryDeletion.thenAccept((del) -> {
-                            logger.info("Automatically deleted confirmation message in " + channel.getName() + ".");
+                        logger.info("Automatically deleted confirmation message in " + channel.getName() + ".");
                     });
                 }
             };
