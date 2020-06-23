@@ -1,4 +1,5 @@
 import org.javacord.api.entity.channel.ServerTextChannel;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
@@ -23,58 +24,62 @@ public class CommandListener implements MessageCreateListener {
 
     private static final Logger logger = LogManager.getLogger("Command");
 
-    public CommandListener() {
-    }
-
     public void onMessageCreate(MessageCreateEvent event) {
-        if (event.getMessageContent().startsWith("!purge")
-                && event.getMessage().getAuthor().getDiscriminatedName().equals("shiggydiggy#8455")) {
 
-            String[] args = event.getMessageContent().split(" ");
-            String user = args[1];
-            String commandSender = event.getMessageAuthor().getDiscriminatedName();
-            Purger purger = new Purger();
+        if (event.getMessage().getAuthor().canManageServer()) {
+            // Authorized command sender
 
-            // Logs purge command usage.
-            logger.info("Sender: " + commandSender + " User: " + user +
-                    " Channel: " + event.getServerTextChannel().get().getName());
+            if (event.getMessageContent().startsWith("!")) {
+                // Command being sent
 
-            // The instant at which the user being purged joined the server.
-            Instant i = (event.getServer().get().getMemberByDiscriminatedName(user).get()
-                    .getJoinedAtTimestamp(event.getServer().get()).get());
+                String sender = event.getMessageAuthor().getDiscriminatedName();
+                String command = event.getMessageContent();
+                String[] args = command.split(" ");
+                ServerTextChannel channel = event.getServerTextChannel().get();
+                Server server = event.getServer().get();
 
-            // Removes original "!purge" command from channel.
-            event.getMessage().delete();
+                if (command.startsWith("!purge")) {
+                    // Purge command
 
-            List<ServerTextChannel> channelsToPurge = new ArrayList<>();
+                    logger.info("Sender: " + sender + "; Channel: " + channel.getName() + "; Server: " + server.getName());
 
-            // Includes appropriate channels for message deletion.
-            if (args.length == 3) {
-                if (args[2].equalsIgnoreCase("all")) {
-                    channelsToPurge = event.getServer().get().getTextChannels();
-                    logger.info("Purge command invoked across all channels.");
+                    String user = args[1];
+
+                    // The instant at which user joined server.
+                    Instant instant = (server.getMemberByDiscriminatedName(user).get().getJoinedAtTimestamp(server).get());
+
+                    // Removes command from channel.
+                    event.getMessage().delete();
+
+                    List<ServerTextChannel> channelsToPurge = new ArrayList<>();
+
+                    // Includes appropriate channels for user deletion.
+                    if (args.length == 3) {
+                        if (args[2].equalsIgnoreCase("all")) {
+                            channelsToPurge = server.getTextChannels();
+                            logger.info("Purge command invoked across all channels.");
+                        }
+                    } else {
+                        channelsToPurge.add(channel);
+                    }
+
+                    // Requests confirmation from sender
+                    Confirmation confirmation = new Confirmation(channel);
+                    confirmation.poseConfirmation(channel, sender, user, instant, channelsToPurge);
+
+                } else if (command.startsWith("!fill")) {
+                    // Fill Command
+
+                    Thread thread = new Thread();
+                    for (int i = 0; i < 25; i++) {
+                        try {
+                            thread.sleep(750);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        channel.sendMessage(Integer.toString(i));
+                    }
                 }
-            } else {
-                channelsToPurge.add(event.getServerTextChannel().get());
-            }
-
-            // Requests confirmation from command sender for message purge
-            Confirmation emoteConfirmation = new Confirmation(event.getServerTextChannel().get());
-            emoteConfirmation.poseConfirmation(event.getServerTextChannel().get(), commandSender, user, i, channelsToPurge);
-
-
-        } else if (event.getMessageContent().startsWith("!fill")) {
-            Thread thread = new Thread();
-            for (int i = 0; i < 25; i++) {
-//                for (int j = 0; j < 5; j++) {
-                try {
-
-                    thread.sleep(750);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                event.getChannel().sendMessage(Integer.toString(i));
-//                }
             }
         }
     }
