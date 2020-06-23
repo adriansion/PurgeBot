@@ -5,7 +5,6 @@ import org.javacord.api.entity.message.MessageSet;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -19,6 +18,17 @@ public class Purger {
     private final static Logger logger = LogManager.getLogger(Purger.class);
 
     public Purger() {
+    }
+
+    public void preliminaryPurgeSequence(String user, Instant i, List<ServerTextChannel> channelsToPurge) {
+
+        // Commits message purge on specified text channel(s).
+        for (ServerTextChannel c : channelsToPurge) {
+            CompletableFuture<Void> purge = this.channelPurgeB(c, user, i);
+
+            // Logs deletion completion.
+            purge.thenAccept((del) -> logger.info("[PURGE] Process initialization successful in " + c.getName() + "."));
+        }
     }
 
     /**
@@ -40,7 +50,7 @@ public class Purger {
 
             // Collects all messages sent to the channel since user joined server.
             allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(i) > 0).get();
-            logger.info(allMessages.size() + " messages found since user join instant in " + c.getName() + ".");
+            logger.info("[PURGE] Analyzing " + allMessages.size() + " messages in " + c.getName() + ".");
 
             // Examines each message and keeps those whose author is the user.
             for (Message m : allMessages) {
@@ -50,7 +60,7 @@ public class Purger {
                 }
             }
 
-            logger.info(userMessageCount + " messages found from user since user join instant in " + c.getName() + ".");
+            logger.info("[PURGE] Analyzing " + userMessageCount + " messages in " + c.getName() + ".");
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -88,7 +98,7 @@ public class Purger {
 
             // Collects all messages sent to the channel since user joined server.
             allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(i) > 0).get();
-            logger.info(allMessages.size() + " total messages found since user join instant in " + c.getName() + ".");
+            logger.info("[PURGE] Analyzing " + allMessages.size() + " messages in " + c.getName() + ".");
 
             Instant twoWeeksPrior = Instant.now().minus(27, ChronoUnit.HALF_DAYS);
 
@@ -105,7 +115,7 @@ public class Purger {
             e.printStackTrace();
         }
 
-        logger.info(userMessageCount + " messages found from user since user join instant in " + c.getName() + ".");
+        logger.info("[PURGE] Analyzing " + userMessageCount + " messages in " + c.getName() + ".");
 
         // Distributes young messages to young message arrays.
         for (Message m : ym) {
@@ -134,12 +144,12 @@ public class Purger {
         {
             // Deletes young messages
             for (ArrayList<Message> a : ya) {
-                c.bulkDelete(a).thenAccept((del) -> logger.info("Deletion count: " + a.size() + " (bulk)"));
+                c.bulkDelete(a).thenAccept((del) -> logger.info("[PURGE] Deletion count: " + a.size() + " (bulk)"));
             }
 
             // Deletes old messages
             for (ArrayList<Message> a : oa) {
-                c.deleteMessages(a).thenAccept((del) -> logger.info("Deletion count: " + a.size()));
+                c.deleteMessages(a).thenAccept((del) -> logger.info("[PURGE] Deletion count: " + a.size()));
             }
         });
     }

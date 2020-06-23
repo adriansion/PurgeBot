@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         logger.info("Attempting to enter application...");
 
-        String token = "token";
+        String token = "NzIxMTU3MzgyMzM5NjkwNTg2.XvBVNA.H48clUzYe6dlH0A8nJ10yXpxHTA";
         DiscordApi bot = new DiscordApiBuilder().setToken(token).login().join();
 
         logger.info("Entered application successfully.");

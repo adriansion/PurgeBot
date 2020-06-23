@@ -40,7 +40,8 @@ public class CommandListener implements MessageCreateListener {
             Purger purger = new Purger();
 
             // Logs purge command usage.
-            logger.info(commandSender + " invoked \"!purge\" on " + user + " in " + event.getServer().get().getName());
+            logger.info("[COMMAND] Sender: " + commandSender + " User: " + user +
+                    " Channel: " + event.getServerTextChannel().get().getName());
 
             // The instant at which the user being purged joined the server.
             Instant i = (event.getServer().get().getMemberByDiscriminatedName(user).get()
@@ -49,36 +50,34 @@ public class CommandListener implements MessageCreateListener {
             // Removes original "!purge" command from channel.
             event.getMessage().delete();
 
-            List<ServerTextChannel> channelsToPurge = new ArrayList<ServerTextChannel>();
+            List<ServerTextChannel> channelsToPurge = new ArrayList<>();
 
             // Includes appropriate channels for message deletion.
             if (args.length == 3) {
                 if (args[2].equalsIgnoreCase("all")) {
                     channelsToPurge = event.getServer().get().getTextChannels();
-                    logger.info("Purge command to be invoked across all channels.");
+                    logger.info("[COMMAND] Purge command invoked across all channels.");
                 }
             } else {
                 channelsToPurge.add(event.getServerTextChannel().get());
             }
 
-            // Commits message purge on specified text channel(s).
-            for (ServerTextChannel c : channelsToPurge) {
-                CompletableFuture<Void> purge = purger.channelPurgeB(c, user, i);
+            // Requests confirmation from command sender for message purge
+            EmoteConfirmation emoteConfirmation = new EmoteConfirmation(event.getServerTextChannel().get());
+            emoteConfirmation.poseConfirmation(event.getServerTextChannel().get(), commandSender, user, i, channelsToPurge);
 
-                // Logs deletion completion.
-                purge.thenAccept((del) -> logger.info(user + " successfully purged in " + c.getName() + "."));
-            }
+
         } else if (event.getMessageContent().startsWith("!fill")) {
             Thread thread = new Thread();
             for (int i = 0; i < 25; i++) {
 //                for (int j = 0; j < 5; j++) {
-                    try {
+                try {
 
-                        thread.sleep(750);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    event.getChannel().sendMessage(Integer.toString(i));
+                    thread.sleep(750);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                event.getChannel().sendMessage(Integer.toString(i));
 //                }
             }
         }

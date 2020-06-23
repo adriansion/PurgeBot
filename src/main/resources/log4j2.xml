@@ -2,7 +2,7 @@
 <Configuration status="INFO" strict = "true" name = "XMLConfig">
     <Appenders>
         <Appender type="Console" name="STDOUT">
-            <Layout type="PatternLayout" pattern="%m%n"/>
+            <Layout type="PatternLayout" pattern="[%level] %d{yyyy-MM-dd HH:mm:ss} [Purge Bot] : %m%n"/>
             <Filters>
                 <Filter type="MarkerFilter" marker="FLOW" onMatch="DENY" onMismatch="NEUTRAL"/>
                 <Filter type="MarkerFilter" marker="EXCEPTION" onMatch="DENY" onMismatch="ACCEPT"/>
