@@ -8,17 +8,13 @@ import org.apache.logging.log4j.LogManager;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Listens for messages sent to any text channel in the server, and acts when
  * the purge command is identified.
- * <p>
  * Command usage: "!purge <Discriminated Name> [all]"
- * <p>
  * Optional: [all] - Purges messages across all server channels. Restricted to
  * working channel if omitted.
- * <p>
  * For example, "!purge shiggydiggy#8455 all"
  *
  * @author Adrian
@@ -63,7 +59,7 @@ public class CommandListener implements MessageCreateListener {
             }
 
             // Requests confirmation from command sender for message purge
-            EmoteConfirmation emoteConfirmation = new EmoteConfirmation(event.getServerTextChannel().get());
+            Confirmation emoteConfirmation = new Confirmation(event.getServerTextChannel().get());
             emoteConfirmation.poseConfirmation(event.getServerTextChannel().get(), commandSender, user, i, channelsToPurge);
 
 

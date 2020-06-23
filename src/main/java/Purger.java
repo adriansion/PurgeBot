@@ -24,54 +24,11 @@ public class Purger {
 
         // Commits message purge on specified text channel(s).
         for (ServerTextChannel c : channelsToPurge) {
-            CompletableFuture<Void> purge = this.channelPurgeB(c, user, i);
+            CompletableFuture<Void> purge = this.channelPurge(c, user, i);
 
             // Logs deletion completion.
             purge.thenAccept((del) -> logger.info("Process initialization successful in " + c.getName() + "."));
         }
-    }
-
-    /**
-     * Version A of channelPurge method: uses standard deleteMessages method with
-     * populated ArrayList of messages.
-     *
-     * @param c    ServerTextChannel
-     * @param user Discriminated username of user being purged
-     * @param i    Instant user being purged joined server
-     * @return CompletableFuture upon completed deletion
-     */
-    public CompletableFuture<Void> channelPurgeA(ServerTextChannel c, String user, Instant i) {
-
-        MessageSet allMessages;
-        List<Message> userMessages = new ArrayList<Message>();
-        int userMessageCount = 0;
-
-        try {
-
-            // Collects all messages sent to the channel since user joined server.
-            allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(i) > 0).get();
-            logger.info("Analyzing " + allMessages.size() + " messages in " + c.getName() + ".");
-
-            // Examines each message and keeps those whose author is the user.
-            for (Message m : allMessages) {
-                if (m.getAuthor().getDiscriminatedName().equals(user)) {
-                    userMessages.add(m);
-                    userMessageCount++;
-                }
-            }
-
-            logger.info("Analyzing " + userMessageCount + " messages in " + c.getName() + ".");
-
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        // Deletes applicable messages from channel.
-        // Use thenRunASync for numerous deletion processes
-        CompletableFuture<Void> completedDeletion = c.deleteMessages(userMessages);
-
-        return completedDeletion;
-
     }
 
     /**
@@ -83,7 +40,7 @@ public class Purger {
      * @param i    Instant user being purged joined server
      * @return CompletableFuture upon completed deletion
      */
-    public CompletableFuture<Void> channelPurgeB(ServerTextChannel c, String user, Instant i) {
+    public CompletableFuture<Void> channelPurge(ServerTextChannel c, String user, Instant i) {
 
         MessageSet allMessages;
         ArrayList<Message> ym = new ArrayList<>(), om = new ArrayList<>();

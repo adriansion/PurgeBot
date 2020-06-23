@@ -1,7 +1,6 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.channel.ServerTextChannel;
-import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
@@ -11,7 +10,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class EmoteConfirmation {
+public class Confirmation {
 
     private final static Logger logger = LogManager.getLogger("Confirmation");
 
@@ -21,7 +20,7 @@ public class EmoteConfirmation {
     private List<ServerTextChannel> channelsToPurge;
     private ServerTextChannel channel;
 
-    public EmoteConfirmation(ServerTextChannel channel) {
+    public Confirmation(ServerTextChannel channel) {
         this.channel = channel;
     }
 
