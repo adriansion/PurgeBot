@@ -1,16 +1,14 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.channel.ServerTextChannel;
-import org.javacord.api.entity.message.Reaction;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
-import org.javacord.api.listener.message.reaction.ReactionAddListener;
 
 import java.time.Instant;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 public class Confirmation {
 
@@ -78,56 +76,6 @@ public class Confirmation {
             }
         }
     }
-
-//    private class confirmationEmoteListener implements ReactionAddListener {
-//
-//        @Override
-//        public void onReactionAdd(ReactionAddEvent event) {
-//
-//            Timer timer = new Timer();
-//            TimerTask task = new TimerTask() {
-//                @Override
-//                public void run() {
-//                    CompletableFuture<Void> messageExpiryDeletion = event.getMessage().get().delete();
-//                    messageExpiryDeletion.thenAccept((del) -> {
-//                        logger.info("Automatically deleted confirmation message in " + channel.getName() + ".");
-//                    });
-//                }
-//            };
-//
-//            if (event.getMessage().get().getAuthor().getDiscriminatedName().equals("Purge#0337")) {
-//                // Confirmation message sent by Purge bot
-//
-//                if (event.getMessage().get().getContent().endsWith(confirmationNumber + "*")) {
-//                    // Confirmation message contains unique confirmation number
-//
-//                    if (event.getUser().getDiscriminatedName().equals("Purge#0337") && event.getReaction().get().getEmoji().equalsEmoji("❎")) {
-//                        logger.info("Allowing sender 15 seconds to confirm deletion process in " + channel.getName() + ".");
-//                        timer.schedule(task, 15000);
-//                    }
-//
-//                    if (event.getUser().getDiscriminatedName().equals(sender)) {
-//                        // Emote sent by command sender
-//
-//                        if (event.getReaction().get().getEmoji().equalsEmoji("✅")) {
-//                            // Confirmation is affirmative
-//                            logger.info("Verification complete. Beginning deletion process...");
-//                            Purger purger = new Purger();
-//                            purger.preliminaryPurgeSequence(user, i, channelsToPurge);
-//
-//                            event.getMessage().get().delete();
-//                            logger.info("Deletion process complete.");
-//
-//                        } else if (event.getReaction().get().getEmoji().equalsEmoji("❎")) {
-//                            // Confirmation is negative
-//                            event.getMessage().get().delete();
-//                            logger.info("Sender rejected confirmation. Deletion process aborted.");
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     public void confirmFromReactionListener(ReactionAddEvent event, String sender) {
         if (sender.equals(this.sender)) {

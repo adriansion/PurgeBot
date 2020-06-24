@@ -18,7 +18,11 @@
             <AppenderRef ref="STDOUT"/>
         </Logger>
 
-        <Logger name="Command" level="info" additivity="false">
+        <Logger name="CommandListener" level="info" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+
+        <Logger name="ReactionListener" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
         </Logger>
 

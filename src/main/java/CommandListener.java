@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class CommandListener implements MessageCreateListener {
 
-    private static final Logger logger = LogManager.getLogger("Command");
+    private static final Logger logger = LogManager.getLogger("CommandListener");
 
     @Override
     public void onMessageCreate(MessageCreateEvent event) {

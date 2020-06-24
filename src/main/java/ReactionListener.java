@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class ReactionListener implements ReactionAddListener {
 
-    private static final Logger logger = LogManager.getLogger("Confirmation");
+    private static final Logger logger = LogManager.getLogger("ReactionListener");
 
     String confirmationNumber, sender;
 
