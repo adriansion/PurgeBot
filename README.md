@@ -11,3 +11,4 @@ To do:
 Known Issues:
 - 
 - Command message does not always delete itself
+- Logged events are partially scrambled from intended order
