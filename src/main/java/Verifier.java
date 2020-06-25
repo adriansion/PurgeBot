@@ -5,19 +5,17 @@ import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class Verifier {
 
-    private static Verifier instance = new Verifier();
+    private static final Verifier instance = new Verifier();
 
     private static final Logger logger = LogManager.getLogger("Vrfy");
 
     private String sender, user, confirmationNumber;
-    private Instant i;
-    private List<ServerTextChannel> channelsToPurge;
+    private List<ServerTextChannel> channels;
     private ServerTextChannel channel;
 
     private Verifier() {
@@ -41,14 +39,13 @@ public class Verifier {
         return confirmationNumber;
     }
 
-    public void poseConfirmation(ServerTextChannel channel, String sender, String user, Instant i, List<ServerTextChannel> channelsToPurge) {
+    public void poseConfirmation(ServerTextChannel channel, String sender, String user, List<ServerTextChannel> channelsToPurge) {
 
         logger.info("Initializing confirmation message in " + this.channel.getName() + ".");
 
         this.sender = sender;
         this.user = user;
-        this.i = i;
-        this.channelsToPurge = channelsToPurge;
+        this.channels = channelsToPurge;
         this.channel = channel;
 
         confirmationNumber = this.createConfirmationNumber();
@@ -64,35 +61,12 @@ public class Verifier {
         logger.info("Sent confirmation message in " + this.channel.getName() + ".");
     }
 
-    private static class confirmationMessageListener implements MessageCreateListener {
-
-        @Override
-        public void onMessageCreate(MessageCreateEvent event) {
-            if (event.getMessageAuthor().getDiscriminatedName().equals("Purge#0337")) {
-                event.getMessage().addReaction("✅");
-                event.getMessage().addReaction("❎");
-            }
-
-            Timer timer = new Timer();
-            TimerTask expiry = new TimerTask() {
-                @Override
-                public void run() {
-                    CompletableFuture<Void> messageExpiryDeletion = event.getMessage().delete();
-                    messageExpiryDeletion.thenAccept((del) -> logger.info("Automatically deleted confirmation message."));
-                }
-            };
-
-            logger.info("Allowing sender 15 seconds to confirm deletion process.");
-            timer.schedule(expiry, 15000);
-        }
-    }
-
     public void confirmFromReactionListener(ReactionAddEvent event, String sender) {
         if (sender.equals(this.sender)) {
             logger.info("Verification received from reaction listener. Starting deletion...");
 
             Purger purger = new Purger();
-            purger.preliminaryPurgeSequence(user, i, channelsToPurge);
+            purger.verifiedDeletion(user, channels);
         }
 
     }

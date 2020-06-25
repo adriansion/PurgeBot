@@ -9,6 +9,8 @@ To do:
 - Look into replacing String references to Purge#0337
 - ~~Separate token into external file (and include in gitignore)~~
 - Better safeties for improper command usage
+- Consider storing Purger messages in a database or other, more reliable medium
+- Improve thread usage
 - ~~Make channelPurgeB allocate messages younger than two weeks to array sizes of 100 to take advantage of BulkDelete API~~
 - ~~Create emote-based verifier in command channel to command user~~
 

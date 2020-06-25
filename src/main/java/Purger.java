@@ -17,14 +17,14 @@ public class Purger {
 
     private static final Logger logger = LogManager.getLogger("Prgr");
 
-    public Purger() {
-    }
+    /**
+     * Called to begin deletion from Verifier.java.
+     */
+    protected void verifiedDeletion(String user, List<ServerTextChannel> channels) {
 
-    public void preliminaryPurgeSequence(String user, Instant i, List<ServerTextChannel> channelsToPurge) {
-
-        // Commits message purge on specified text channel(s).
-        for (ServerTextChannel c : channelsToPurge) {
-            CompletableFuture<Void> purge = this.channelPurge(c, user, i);
+        // Commits deletion on specified text channel(s).
+        for (ServerTextChannel c : channels) {
+            CompletableFuture<Void> purge = this.channelPurge(c, user);
 
             // Logs deletion completion.
             purge.thenAccept((del) -> logger.info("Process initialization successful in " + c.getName() + "."));
@@ -36,25 +36,28 @@ public class Purger {
      *
      * @param c    ServerTextChannel
      * @param user Discriminated username of user being purged
-     * @param i    Instant user being purged joined server
      * @return CompletableFuture upon completed deletion
      */
-    public CompletableFuture<Void> channelPurge(ServerTextChannel c, String user, Instant i) {
+    public CompletableFuture<Void> channelPurge(ServerTextChannel c, String user) {
 
+        // The instant at which user joined server.
+        Instant instant = c.getServer().getMemberByDiscriminatedName(user).get().getJoinedAtTimestamp(c.getServer()).get();
         MessageSet allMessages;
         ArrayList<Message> ym = new ArrayList<>(), om = new ArrayList<>();
         Stack<ArrayList<Message>> messageArrays = new Stack<>(), ya = new Stack<>(), oa = new Stack<>();
         messageArrays.push(new ArrayList<>());
         ya.push(new ArrayList<>());
         oa.push(new ArrayList<>());
-        int userMessageCount = 0, MAXARRAYSIZE = 10;
+        int userMessageCount = 0;
+        final int maxArraySize = 10;
         boolean added;
 
         try {
 
-            // Collects all messages sent to the channel since user joined server.
-            allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(i) > 0).get();
-            logger.info("Analyzing " + allMessages.size() + " messages in " + c.getName() + ".");
+            // Collects all messages sent to channel since user joined server.
+            logger.info("Collecting channel messages. [Channel: " + c.getName() + "].");
+            allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(instant) > 0).get();
+            logger.info("Found " + allMessages.size() + " channel messages. [Channel: " + c.getName() + "]");
 
             Instant twoWeeksPrior = Instant.now().minus(27, ChronoUnit.HALF_DAYS);
 
@@ -84,7 +87,7 @@ public class Purger {
 
         // Distributes old messages to old message arrays.
         for (Message m : om) {
-            if (oa.peek().size() < MAXARRAYSIZE) {
+            if (oa.peek().size() < maxArraySize) {
                 oa.peek().add(m);
             } else {
                 oa.push(new ArrayList<>());

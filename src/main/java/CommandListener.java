@@ -1,12 +1,10 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,28 +45,25 @@ public class CommandListener implements MessageCreateListener {
 
                     String user = args[1];
 
-                    // The instant at which user joined server.
-                    Instant instant = (server.getMemberByDiscriminatedName(user).get().getJoinedAtTimestamp(server).get());
-
                     // Removes command from channel.
                     event.getMessage().delete();
 
-                    List<ServerTextChannel> channelsToPurge = new ArrayList<>();
+                    List<ServerTextChannel> channels = new ArrayList<>();
 
                     // Includes appropriate channels for user deletion.
                     if (args.length == 3) {
                         if (args[2].equalsIgnoreCase("all")) {
-                            channelsToPurge = server.getTextChannels();
+                            channels = server.getTextChannels();
                             logger.info("Purge command invoked across all channels.");
                         }
                     } else {
-                        channelsToPurge.add(channel);
+                        channels.add(channel);
                     }
 
                     // Requests confirmation from sender
                     Verifier verifier = Verifier.getInstance();
                     verifier.setChannel(channel);
-                    verifier.poseConfirmation(channel, sender, user, instant, channelsToPurge);
+                    verifier.poseConfirmation(channel, sender, user, channels);
 
                 }
             }

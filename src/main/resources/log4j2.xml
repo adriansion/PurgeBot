@@ -22,6 +22,10 @@
             <AppenderRef ref="STDOUT"/>
         </Logger>
 
+        <Logger name="CfML" level="info" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+
         <Logger name="RctL" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
         </Logger>
