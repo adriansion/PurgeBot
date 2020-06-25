@@ -9,21 +9,21 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class Confirmation {
+public class Verifier {
 
-    private static Confirmation instance = new Confirmation();
+    private static Verifier instance = new Verifier();
 
-    private static final Logger logger = LogManager.getLogger("Conf");
+    private static final Logger logger = LogManager.getLogger("Vrfy");
 
     private String sender, user, confirmationNumber;
     private Instant i;
     private List<ServerTextChannel> channelsToPurge;
     private ServerTextChannel channel;
 
-    private Confirmation() {
+    private Verifier() {
     }
 
-    public static Confirmation getInstance() {
+    public static Verifier getInstance() {
         return instance;
     }
 

@@ -66,9 +66,9 @@ public class CommandListener implements MessageCreateListener {
                     }
 
                     // Requests confirmation from sender
-                    Confirmation confirmation = Confirmation.getInstance();
-                    confirmation.setChannel(channel);
-                    confirmation.poseConfirmation(channel, sender, user, instant, channelsToPurge);
+                    Verifier verifier = Verifier.getInstance();
+                    verifier.setChannel(channel);
+                    verifier.poseConfirmation(channel, sender, user, instant, channelsToPurge);
 
                 }
             }

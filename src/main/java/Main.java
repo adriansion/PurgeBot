@@ -26,6 +26,7 @@ public class Main {
             logger.info("Entered application successfully.");
 
             bot.addMessageCreateListener(new CommandListener());
+            
         } catch (IllegalStateException | CompletionException e) {
             logger.error("Invalid token.");
         } catch (FileNotFoundException e) {

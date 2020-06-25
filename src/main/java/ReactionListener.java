@@ -14,8 +14,8 @@ public class ReactionListener implements ReactionAddListener {
 
     private static final Logger logger = LogManager.getLogger("RctL");
 
-    Confirmation confirmation = Confirmation.getInstance();
-    String sender = confirmation.getSender(), reactor;
+    Verifier verifier = Verifier.getInstance();
+    String sender = verifier.getSender(), reactor;
 
     @Override
     public void onReactionAdd(ReactionAddEvent event) {
@@ -27,7 +27,7 @@ public class ReactionListener implements ReactionAddListener {
         if (reactor.equals(sender)) {
             // Reaction added by sender
 
-            if (message.getContent().endsWith(confirmation.getConfirmationNumber() + "*")) {
+            if (message.getContent().endsWith(verifier.getConfirmationNumber() + "*")) {
                 // Message contains unique confirmation number
 
                 if (reaction.equalsEmoji("✅")) {
@@ -35,7 +35,7 @@ public class ReactionListener implements ReactionAddListener {
 
                     logger.info("Verification complete. Informing confirmation of verification...");
 
-                    confirmation.confirmFromReactionListener(event, sender);
+                    verifier.confirmFromReactionListener(event, sender);
                     message.delete();
 
                 } else if (reaction.equalsEmoji("❎")) {
