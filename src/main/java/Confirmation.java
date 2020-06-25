@@ -14,7 +14,7 @@ public class Confirmation {
 
     private static Confirmation instance = new Confirmation();
 
-    private static final Logger logger = LogManager.getLogger("Confirmation");
+    private static final Logger logger = LogManager.getLogger("Conf");
 
     private String sender, user, confirmationNumber;
     private Instant i;

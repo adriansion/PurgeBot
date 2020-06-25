@@ -4,7 +4,7 @@
     <Appenders>
 
         <Appender type="Console" name="STDOUT">
-            <Layout type="PatternLayout" pattern="[%level] [%logger] %d{yyyy-MM-dd HH:mm:ss} : %m%n"/>
+            <Layout type="PatternLayout" pattern="[%d{yyyy-MM-dd HH:mm:ss}] [%level] [%logger] : %m%n"/>
             <Filters>
                 <Filter type="MarkerFilter" marker="FLOW" onMatch="DENY" onMismatch="NEUTRAL"/>
                 <Filter type="MarkerFilter" marker="EXCEPTION" onMatch="DENY" onMismatch="ACCEPT"/>
@@ -18,19 +18,19 @@
             <AppenderRef ref="STDOUT"/>
         </Logger>
 
-        <Logger name="CommandListener" level="info" additivity="false">
+        <Logger name="CmdL" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
         </Logger>
 
-        <Logger name="ReactionListener" level="info" additivity="false">
+        <Logger name="RctL" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
         </Logger>
 
-        <Logger name="Confirmation" level="info" additivity="false">
+        <Logger name="Conf" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
         </Logger>
 
-        <Logger name="Purger" level="info" additivity="false">
+        <Logger name="Prgr" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
         </Logger>
 

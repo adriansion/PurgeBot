@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 public class Purger {
 
-    private static final Logger logger = LogManager.getLogger("Purger");
+    private static final Logger logger = LogManager.getLogger("Prgr");
 
     public Purger() {
     }

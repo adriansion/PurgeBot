@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class CommandListener implements MessageCreateListener {
 
-    private static final Logger logger = LogManager.getLogger("CommandListener");
+    private static final Logger logger = LogManager.getLogger("CmdL");
 
     @Override
     public void onMessageCreate(MessageCreateEvent event) {
@@ -44,7 +44,7 @@ public class CommandListener implements MessageCreateListener {
                 if (command.startsWith("!purge")) {
                     // Purge command
 
-                    logger.info("Sender: " + sender + "; Channel: " + channel.getName() + "; Server: " + server.getName());
+                    logger.info("[Sender: " + sender + "] [Channel: " + channel.getName() + "] [Server: " + server.getName() + "]");
 
                     String user = args[1];
 

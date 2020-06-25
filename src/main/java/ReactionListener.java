@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class ReactionListener implements ReactionAddListener {
 
-    private static final Logger logger = LogManager.getLogger("ReactionListener");
+    private static final Logger logger = LogManager.getLogger("RctL");
 
     String confirmationNumber, sender;
 
@@ -39,7 +39,7 @@ public class ReactionListener implements ReactionAddListener {
     @Override
     public void onReactionAdd(ReactionAddEvent event) {
 
-        ServerTextChannel channel = event.getServerTextChannel().get();
+        String channel = event.getServerTextChannel().get().getName();
         Message message = event.getMessage().get();
         Confirmation confirmation = Confirmation.getInstance();
         confirmationNumber = confirmation.getConfirmationNumber();
@@ -52,7 +52,7 @@ public class ReactionListener implements ReactionAddListener {
             public void run() {
                 CompletableFuture<Void> messageExpiryDeletion = event.getMessage().get().delete();
                 messageExpiryDeletion.thenAccept((del) -> {
-                    logger.info("Automatically deleted confirmation message in " + channel.getName() + ".");
+                    logger.info("Automatically deleted confirmation message in " + channel + ".");
                 });
             }
         };
@@ -63,27 +63,31 @@ public class ReactionListener implements ReactionAddListener {
             if (message.getContent().endsWith(confirmationNumber + "*")) {
                 // Confirmation message contains unique confirmation number
 
-                if (reactor.equals("Purge#0337") && reaction.equalsEmoji("❎")) {
-                    logger.info("Allowing sender 15 seconds to confirm deletion process in " + channel.getName() + ".");
-                    timer.schedule(expiry, 15000);
-                }
+                if (reaction.equalsEmoji("✅")) { // Reaction is affirmative
 
-                if (reactor.equals(sender)) {
-                    // Emote sent by command sender
+                    if (reactor.equals(sender)) {
+                        // Reaction added by sender
 
-                    if (reaction.equalsEmoji("✅")) {
-                        // Confirmation is affirmative
                         logger.info("Verification complete. Beginning deletion process...");
 
                         confirmation.confirmFromReactionListener(event, sender);
-
                         message.delete();
-                        logger.info("Informed confirmation of verification.");
 
-                    } else if (reaction.equalsEmoji("❎")) {
-                        // Confirmation is negative
+                        logger.info("Informed confirmation of verification.");
+                    }
+                } else if (reaction.equalsEmoji("❎")) { // Reaction is negative
+
+                    if (reactor.equals(sender)) {
+                        // Reaction added by sender
+
                         message.delete();
                         logger.info("Sender rejected confirmation. Deletion process aborted.");
+
+                    } else if (reactor.equals("Purge0337")) {
+                        // Reaction added by bot
+
+                        logger.info("Allowing sender 15 seconds to confirm deletion process in " + channel + ".");
+                        timer.schedule(expiry, 15000);
                     }
                 }
             }
