@@ -32,7 +32,7 @@ public class Purger {
     }
 
     /**
-     * Assorts user messages into specified ArrayLists and deletes from each individual list sequentially.
+     * Assorts user messages into ArrayLists and deletes from each individual list sequentially.
      *
      * @param c    ServerTextChannel
      * @param user Discriminated username of user being purged

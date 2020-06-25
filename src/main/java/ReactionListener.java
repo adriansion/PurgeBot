@@ -6,8 +6,7 @@ import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.reaction.ReactionAddListener;
 
 /**
- * Listens for emotes sent to a specified message.
- * Particularly useful for Confirmation.java
+ * Listens for reactions added to deletion confirmation messages.
  *
  * @author Adrian
  */
@@ -29,7 +28,7 @@ public class ReactionListener implements ReactionAddListener {
             // Reaction added by sender
 
             if (message.getContent().endsWith(confirmation.getConfirmationNumber() + "*")) {
-                // Confirmation message contains unique confirmation number
+                // Message contains unique confirmation number
 
                 if (reaction.equalsEmoji("✅")) {
                     // Reaction is affirmative

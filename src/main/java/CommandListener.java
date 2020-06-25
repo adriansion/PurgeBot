@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Listens for messages sent to any text channel in the server, and acts when
- * the purge command is identified.
+ * Listens for purge command sent to any text channel in the server.
  * <p>
  * Command usage: "!purge <Discriminated Name> [all]"
  * Optional: [all] - Purges messages across all server channels. Restricted to
@@ -71,18 +70,6 @@ public class CommandListener implements MessageCreateListener {
                     confirmation.setChannel(channel);
                     confirmation.poseConfirmation(channel, sender, user, instant, channelsToPurge);
 
-                } else if (command.startsWith("!fill")) {
-                    // Fill Command
-
-                    Thread thread = new Thread();
-                    for (int i = 0; i < 25; i++) {
-                        try {
-                            thread.sleep(750);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        channel.sendMessage(Integer.toString(i));
-                    }
                 }
             }
         }
