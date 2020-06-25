@@ -21,12 +21,13 @@ public class ReactionListener implements ReactionAddListener {
 
     private static final Logger logger = LogManager.getLogger("RctL");
 
-    String confirmationNumber, sender;
+    String sender, reactor;
+    Confirmation confirmation = Confirmation.getInstance();
+
+    private static ReactionListener instance = new ReactionListener();
 
     private ReactionListener() {
     }
-
-    private static ReactionListener instance = new ReactionListener();
 
     public static ReactionListener getInstance() {
         return instance;
@@ -39,28 +40,14 @@ public class ReactionListener implements ReactionAddListener {
     @Override
     public void onReactionAdd(ReactionAddEvent event) {
 
-        String channel = event.getServerTextChannel().get().getName();
-        Message message = event.getMessage().get();
-        Confirmation confirmation = Confirmation.getInstance();
-        confirmationNumber = confirmation.getConfirmationNumber();
-        String reactor = event.getUser().getDiscriminatedName();
         Emoji reaction = event.getReaction().get().getEmoji();
-
-        Timer timer = new Timer();
-        TimerTask expiry = new TimerTask() {
-            @Override
-            public void run() {
-                CompletableFuture<Void> messageExpiryDeletion = event.getMessage().get().delete();
-                messageExpiryDeletion.thenAccept((del) -> {
-                    logger.info("Automatically deleted confirmation message in " + channel + ".");
-                });
-            }
-        };
+        Message message = event.getMessage().get();
+        reactor = event.getUser().getDiscriminatedName();
 
         if (message.getAuthor().getDiscriminatedName().equals("Purge#0337")) {
             // Confirmation message sent by Purge bot
 
-            if (message.getContent().endsWith(confirmationNumber + "*")) {
+            if (message.getContent().endsWith(confirmation.getConfirmationNumber() + "*")) {
                 // Confirmation message contains unique confirmation number
 
                 if (reaction.equalsEmoji("✅")) { // Reaction is affirmative
@@ -86,7 +73,18 @@ public class ReactionListener implements ReactionAddListener {
                     } else if (reactor.equals("Purge0337")) {
                         // Reaction added by bot
 
-                        logger.info("Allowing sender 15 seconds to confirm deletion process in " + channel + ".");
+                        Timer timer = new Timer();
+                        TimerTask expiry = new TimerTask() {
+                            @Override
+                            public void run() {
+                                CompletableFuture<Void> messageExpiryDeletion = event.getMessage().get().delete();
+                                messageExpiryDeletion.thenAccept((del) -> {
+                                    logger.info("Automatically deleted confirmation message.");
+                                });
+                            }
+                        };
+
+                        logger.info("Allowing sender 15 seconds to confirm deletion process.");
                         timer.schedule(expiry, 15000);
                     }
                 }
