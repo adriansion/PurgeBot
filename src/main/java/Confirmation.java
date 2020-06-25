@@ -6,9 +6,8 @@ import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class Confirmation {
 
@@ -54,8 +53,7 @@ public class Confirmation {
 
         confirmationNumber = this.createConfirmationNumber();
 
-        this.channel.addReactionAddListener(ReactionListener.getInstance());
-        ReactionListener.getInstance().setSender(this.sender);
+        this.channel.addReactionAddListener(new ReactionListener());
         this.channel.addMessageCreateListener(new confirmationMessageListener());
 
         this.channel.sendMessage("Purge command invoked by **" + this.sender
@@ -74,6 +72,18 @@ public class Confirmation {
                 event.getMessage().addReaction("✅");
                 event.getMessage().addReaction("❎");
             }
+
+            Timer timer = new Timer();
+            TimerTask expiry = new TimerTask() {
+                @Override
+                public void run() {
+                    CompletableFuture<Void> messageExpiryDeletion = event.getMessage().delete();
+                    messageExpiryDeletion.thenAccept((del) -> logger.info("Automatically deleted confirmation message."));
+                }
+            };
+
+            logger.info("Allowing sender 15 seconds to confirm deletion process.");
+            timer.schedule(expiry, 15000);
         }
     }
 
@@ -85,5 +95,9 @@ public class Confirmation {
             purger.preliminaryPurgeSequence(user, i, channelsToPurge);
         }
 
+    }
+
+    public String getSender() {
+        return this.sender;
     }
 }
