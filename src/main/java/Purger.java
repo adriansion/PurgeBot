@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 public class Purger {
 
-    private static final Logger logger = LogManager.getLogger("Prgr");
+    private static final Logger logger = LogManager.getLogger("Purger");
 
     /**
      * Called to begin deletion from Verifier.java.

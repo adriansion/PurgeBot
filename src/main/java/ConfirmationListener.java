@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class ConfirmationListener implements MessageCreateListener {
 
-    private static final Logger logger = LogManager.getLogger("CfML");
+    private static final Logger logger = LogManager.getLogger("ConfirmationListener");
 
     @Override
     public void onMessageCreate(MessageCreateEvent event) {

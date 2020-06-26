@@ -9,7 +9,7 @@ public class Verifier {
 
     private static final Verifier instance = new Verifier();
 
-    private static final Logger logger = LogManager.getLogger("Vrfy");
+    private static final Logger logger = LogManager.getLogger("Verifier");
 
     private String sender, user, confirmationNumber;
     private List<ServerTextChannel> channels;

@@ -12,7 +12,7 @@ import org.javacord.api.listener.message.reaction.ReactionAddListener;
  */
 public class ReactionListener implements ReactionAddListener {
 
-    private static final Logger logger = LogManager.getLogger("RctL");
+    private static final Logger logger = LogManager.getLogger("ReactionListener");
 
     Verifier verifier = Verifier.getInstance();
     String sender = verifier.getSender(), reactor;
