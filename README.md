@@ -6,7 +6,7 @@ To do:
 - Add verifier for "all" command argument
 - Tidy up code
 - Improve logging for each deletion
-- Look into replacing String references to Purge#0337
+- ~~Look into replacing String references to Purge#0337~~
 - ~~Separate token into external file (and include in gitignore)~~
 - Better safeties for improper command usage
 - Consider storing Purger messages in a database or other, more reliable medium

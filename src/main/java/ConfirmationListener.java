@@ -13,13 +13,13 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Adrian
  */
-public class confirmationMessageListener implements MessageCreateListener {
+public class ConfirmationListener implements MessageCreateListener {
 
     private static final Logger logger = LogManager.getLogger("CfML");
 
     @Override
     public void onMessageCreate(MessageCreateEvent event) {
-        if (event.getMessageAuthor().getDiscriminatedName().equals("Purge#0337")) {
+        if (event.getMessageContent().endsWith(Verifier.getInstance().getConfirmationNumber() + "*")) {
             event.getMessage().addReaction("✅");
             event.getMessage().addReaction("❎");
         }
