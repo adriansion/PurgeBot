@@ -10,8 +10,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Purger {
 
@@ -24,10 +24,11 @@ public class Purger {
 
         // Commits deletion on specified text channel(s).
         for (ServerTextChannel c : channels) {
-            CompletableFuture<Void> purge = this.channelPurge(c, user);
+//            CompletableFuture<Void> purge = this.channelPurge(c, user);
+            this.channelPurge(c, user);
 
             // Logs deletion completion.
-            purge.thenAccept((del) -> logger.info("Process initialization successful in " + c.getName() + "."));
+//            purge.thenAccept((del) -> logger.info("Deletion successful in " + c.getName() + "."));
         }
     }
 
@@ -38,12 +39,13 @@ public class Purger {
      * @param user Discriminated username of user being purged
      * @return CompletableFuture upon completed deletion
      */
-    public CompletableFuture<Void> channelPurge(ServerTextChannel c, String user) {
+    public void channelPurge(ServerTextChannel c, String user) {
 
         // The instant at which user joined server.
         Instant instant = c.getServer().getMemberByDiscriminatedName(user).get().getJoinedAtTimestamp(c.getServer()).get();
         MessageSet allMessages;
         ArrayList<Message> ym = new ArrayList<>(), om = new ArrayList<>();
+        ArrayList<CompletableFuture<Void>> yf = new ArrayList<>(), of = new ArrayList<>();
         Stack<ArrayList<Message>> messageArrays = new Stack<>(), ya = new Stack<>(), oa = new Stack<>();
         messageArrays.push(new ArrayList<>());
         ya.push(new ArrayList<>());
@@ -51,6 +53,7 @@ public class Purger {
         int userMessageCount = 0;
         final int maxArraySize = 10;
         boolean added;
+        AtomicBoolean allCallableDeletionsCompleted = new AtomicBoolean(true);
 
         try {
 
@@ -77,7 +80,7 @@ public class Purger {
 
         // Distributes young messages to young message arrays.
         for (Message m : ym) {
-            if (ya.peek().size() < 100) {
+            if (ya.peek().size() < 1) {
                 ya.peek().add(m);
             } else {
                 ya.push(new ArrayList<>());
@@ -95,20 +98,63 @@ public class Purger {
             }
         }
 
+        ExecutorService executor1 = Executors.newSingleThreadExecutor();
+        for (ArrayList<Message> a : ya) {
+            Runnable log = () -> {
+                logger.info("Deleting " + a.size() + " message(s)... (bulk)");
+            };
+            CompletableFuture<Void> logf = CompletableFuture.runAsync(log); // submit to a thread
+            yf.add(CompletableFuture.allOf(c.deleteMessages(a), logf));
+        }
 
-        // Deletes applicable messages from channel.
-        return CompletableFuture.runAsync(() ->
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        ArrayList<Callable<Void>> callables = new ArrayList<>();
+        yf.forEach((f) -> callables.add(() -> {
+            f.get();
+            return null;
+        }));
 
-        {
-            // Deletes young messages
-            for (ArrayList<Message> a : ya) {
-                c.bulkDelete(a).thenAccept((del) -> logger.info("Deletion count: " + a.size() + " (bulk)"));
+        try {
+            for (Future f : executor.invokeAll(callables)) {
+                if (!f.isDone()) {
+                    allCallableDeletionsCompleted.set(false);
+                    break;
+                }
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (allCallableDeletionsCompleted.get()) {
+            logger.info("Deletion successful in " + c.getName() + ".");
+        } else {
+            logger.info("Deletion concluded but possibly incomplete in " + c.getName() + ".");
+        }
 
-            // Deletes old messages
-            for (ArrayList<Message> a : oa) {
-                c.deleteMessages(a).thenAccept((del) -> logger.info("Deletion count: " + a.size()));
-            }
-        });
+//        return CompletableFuture.allOf(yf.get(1), yf.get(2));
+
+
+//        // Deletes applicable messages from channel.
+//        return CompletableFuture.runAsync(() ->
+//
+//        {
+//            // Deletes young messages
+//            for (ArrayList<Message> a : ya) {
+////                c.bulkDelete(a).thenAccept((del) -> logger.info("Deletion count: " + a.size() + " (bulk)"));
+//
+////                CompletableFuture<Void> future = c.bulkDelete(a);
+//                CompletableFuture<Void> future = c.deleteMessages(a);
+//                try {
+//                    future.get();
+//                    logger.info("Deletion count: " + a.size() + " (bulk)");
+//                } catch (InterruptedException | ExecutionException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            // Deletes old messages
+////            for (ArrayList<Message> a : oa) {
+////                c.deleteMessages(a).thenAccept((del) -> logger.info("Deletion count: " + a.size()));
+////            }
+//        });
     }
 }

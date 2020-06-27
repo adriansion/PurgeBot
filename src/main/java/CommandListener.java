@@ -61,9 +61,11 @@ public class CommandListener implements MessageCreateListener {
                     }
 
                     // Requests confirmation from sender
-                    Verifier verifier = Verifier.getInstance();
-                    verifier.setChannel(channel);
-                    verifier.poseConfirmation(channel, sender, user, channels);
+//                    Verifier verifier = Verifier.getInstance();
+//                    verifier.setChannel(channel);
+//                    verifier.poseConfirmation(channel, sender, user, channels);
+                    Purger purger = new Purger();
+                    purger.verifiedDeletion(user, channels);
 
                 }
             }
