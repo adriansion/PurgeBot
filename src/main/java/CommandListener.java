@@ -7,6 +7,10 @@ import org.javacord.api.listener.message.MessageCreateListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Listens for purge command sent to any text channel in the server.
@@ -67,7 +71,24 @@ public class CommandListener implements MessageCreateListener {
                     Purger purger = new Purger();
                     purger.verifiedDeletion(user, channels);
 
+                } else if (command.startsWith("!fill")) {
+                    // Fill Command
+                    Runnable filler = () -> {
+                        for (int i = 0; i < 5000; i++) {
+                            try {
+                                Thread.currentThread().sleep(1200);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            channel.sendMessage(Integer.toString(i));
+                        }
+
+                    };
+                    ExecutorService executor = Executors.newFixedThreadPool(4);
+                    executor.execute(filler);
+                    executor.shutdown();
                 }
+
             }
         }
     }
