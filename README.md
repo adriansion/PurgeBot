@@ -14,10 +14,13 @@ To do:
 - ~~Make channelPurgeB allocate messages younger than two weeks to array sizes of 100 to take advantage of BulkDelete API~~
 - ~~Create emote-based verifier in command channel to command user~~
 - Run Purger channelPurge in separate thread from listener thread
-- Delay deletion logs to correspond with deletions
+- _Delay deletion logs to correspond with deletions_
 - Consider re-merging old and new message arrays
+- Build initialization command that reads/collects messages, separate from actual deletion command
+- Get rate limit for deletion directly to time deletion requests
 
 Known Issues:
 - 
 - Command message does not always delete itself
+    - Seems to delete (cannot be deleted manually or edited) but still appears
 - ~~Logged events are partially scrambled from intended order~~

@@ -79,7 +79,7 @@ public class Purger {
 
         // Distributes young messages to young message arrays.
         for (Message m : ym) {
-            if (ya.peek().size() < 3000) {
+            if (ya.peek().size() < 100) {
                 ya.peek().add(m);
             } else {
                 ya.push(new ArrayList<>());
@@ -118,8 +118,11 @@ public class Purger {
             });
 
             successfulDeletions.forEach((b) -> {
-                System.out.println(b);
+                if (!b) {
+                    System.out.println(b);
+                }
             });
+            logger.info("Deletion concluded in " + c.getName() + ".");
         };
         ExecutorService executor = Executors.newCachedThreadPool();
         executor.execute(task);
