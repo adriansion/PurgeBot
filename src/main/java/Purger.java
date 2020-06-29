@@ -43,31 +43,24 @@ public class Purger {
         // The instant at which user joined server.
         Instant instant = c.getServer().getMemberByDiscriminatedName(user).get().getJoinedAtTimestamp(c.getServer()).get();
         MessageSet allMessages;
-        ArrayList<Message> ym = new ArrayList<>(), om = new ArrayList<>();
+        ArrayList<Message> userMessages = new ArrayList<>();
         ArrayList<CompletableFuture<Void>> yf = new ArrayList<>(), of = new ArrayList<>();
-        Stack<ArrayList<Message>> messageArrays = new Stack<>(), ya = new Stack<>(), oa = new Stack<>();
+        Stack<ArrayList<Message>> messageArrays = new Stack<>();
         messageArrays.push(new ArrayList<>());
-        ya.push(new ArrayList<>());
-        oa.push(new ArrayList<>());
         int userMessageCount = 0;
-        final int maxArraySize = 10;
-        boolean added;
-        AtomicBoolean allCallableDeletionsCompleted = new AtomicBoolean(true);
+//        AtomicBoolean allCallableDeletionsCompleted = new AtomicBoolean(true);
 
         try {
 
             // Collects all messages sent to channel since user joined server.
-            logger.info("Collecting channel messages. [Channel: " + c.getName() + "].");
+            logger.info("Collecting channel messages... [Channel: " + c.getName() + "].");
             allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(instant) > 0).get();
-            logger.info("Found " + allMessages.size() + " channel messages. [Channel: " + c.getName() + "]");
-
-            Instant twoWeeksPrior = Instant.now().minus(27, ChronoUnit.HALF_DAYS);
+            logger.info("Found " + allMessages.size() + " channel messages since the user joined. [Channel: " + c.getName() + "]");
 
             // Examines each message and keeps those whose author is the user.
             for (Message m : allMessages) {
                 if (m.getAuthor().getDiscriminatedName().equals(user)) {
-
-                    added = m.getCreationTimestamp().isAfter(twoWeeksPrior) ? ym.add(m) : om.add(m);
+                    userMessages.add(m);
                     userMessageCount++;
                 }
             }
@@ -78,29 +71,17 @@ public class Purger {
         logger.info("Analyzing " + userMessageCount + " messages in " + c.getName() + ".");
 
         // Distributes young messages to young message arrays.
-        for (Message m : ym) {
-            if (ya.peek().size() < 100) {
-                ya.peek().add(m);
-            } else {
-                ya.push(new ArrayList<>());
-                ya.peek().add(m);
+        for (Message m : userMessages) {
+            if (messageArrays.peek().size() >= 100) {
+                messageArrays.push(new ArrayList<>());
             }
-        }
-
-        // Distributes old messages to old message arrays.
-        for (Message m : om) {
-            if (oa.peek().size() < maxArraySize) {
-                oa.peek().add(m);
-            } else {
-                oa.push(new ArrayList<>());
-                oa.peek().add(m);
-            }
+            messageArrays.peek().add(m);
         }
 
         ArrayList<Boolean> successfulDeletions = new ArrayList<>();
         HashMap<CompletableFuture<Void>, Integer> fm = new HashMap<>();
         Runnable task = () -> {
-            for (ArrayList<Message> a : ya) {
+            for (ArrayList<Message> a : messageArrays) {
                 fm.put(c.deleteMessages(a), a.size());
             }
 
@@ -113,13 +94,11 @@ public class Purger {
                 }
             });
 
-            fm.forEach((f, i) -> {
-                successfulDeletions.add(f.isDone());
-            });
+            fm.forEach((f, i) -> successfulDeletions.add(f.isDone()));
 
             successfulDeletions.forEach((b) -> {
                 if (!b) {
-                    System.out.println(b);
+                    System.out.println(false);
                 }
             });
             logger.info("Deletion concluded in " + c.getName() + ".");
