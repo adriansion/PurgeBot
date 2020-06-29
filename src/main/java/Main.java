@@ -3,6 +3,8 @@ import org.javacord.api.DiscordApiBuilder;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.javacord.core.util.ratelimit.RatelimitBucket;
+import org.javacord.core.util.rest.RestEndpoint;
 
 import java.io.File;
 import java.io.FileNotFoundException;

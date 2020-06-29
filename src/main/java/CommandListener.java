@@ -28,7 +28,8 @@ public class CommandListener implements MessageCreateListener {
     @Override
     public void onMessageCreate(MessageCreateEvent event) {
 
-        if (event.getMessage().getAuthor().canManageServer()) {
+//        if (event.getMessage().getAuthor().canManageServer()) {
+        if (event.getMessageAuthor().getDiscriminatedName().equalsIgnoreCase("shiggydiggy#8455")){
             // Authorized command sender
 
             if (event.getMessageContent().startsWith("!")) {
@@ -43,7 +44,7 @@ public class CommandListener implements MessageCreateListener {
                 if (command.startsWith("!purge")) {
                     // Purge command
 
-                    logger.info("[Sender: " + sender + "] [Channel: " + channel.getName() + "] [Server: " + server.getName() + "]");
+                    logger.info("Purge command received. [Sender: " + sender + "] [Channel: " + channel.getName() + "] [Server: " + server.getName() + "]");
 
                     String user = args[1];
 
@@ -67,14 +68,14 @@ public class CommandListener implements MessageCreateListener {
 //                    verifier.setChannel(channel);
 //                    verifier.poseConfirmation(channel, sender, user, channels);
                     Purger purger = new Purger();
-                    purger.verifiedDeletion(user, channels);
+                    purger.verifiedDeletion(user, channels, event.getApi());
 
                 } else if (command.startsWith("!fill")) {
                     // Fill Command
                     Runnable filler = () -> {
                         for (int i = 0; i < 5000; i++) {
                             try {
-                                Thread.currentThread().sleep(1200);
+                                Thread.sleep(1200);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }

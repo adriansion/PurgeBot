@@ -63,7 +63,7 @@ public class Verifier {
             logger.info("Verification received from reaction listener. Starting deletion...");
 
             Purger purger = new Purger();
-            purger.verifiedDeletion(user, channels);
+//            purger.verifiedDeletion(user, channels);
         }
 
     }

@@ -1,3 +1,4 @@
+import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageSet;
@@ -5,6 +6,10 @@ import org.javacord.api.entity.message.MessageSet;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.javacord.api.exception.UnknownMessageException;
+import org.javacord.api.util.ratelimit.Ratelimiter;
+import org.javacord.core.util.ratelimit.RatelimitBucket;
+import org.javacord.core.util.ratelimit.RatelimitManager;
+import org.javacord.core.util.rest.RestEndpoint;
 
 import java.time.Instant;
 import java.util.*;
@@ -13,23 +18,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Purger {
 
     private static final Logger logger = LogManager.getLogger("Purger");
+    private DiscordApi api;
 
     /**
      * Called to begin deletion from Verifier.java.
      */
-    protected void verifiedDeletion(String user, List<ServerTextChannel> channels) {
-
+    protected void verifiedDeletion(String user, List<ServerTextChannel> channels, DiscordApi api) {
+        this.api = api;
         // Commits deletion on specified text channel(s).
         for (ServerTextChannel c : channels) {
-//            CompletableFuture<Void> purge = this.channelPurge(c, user);
             this.channelPurge(c, user);
-
-            // Logs deletion completion.
-//            purge.thenAccept((del) -> logger.info("Deletion successful in " + c.getName() + "."));
         }
     }
 
@@ -38,7 +41,6 @@ public class Purger {
      *
      * @param c    ServerTextChannel
      * @param user Discriminated username of user being purged
-     * @return CompletableFuture upon completed deletion
      */
     public void channelPurge(ServerTextChannel c, String user) {
 
@@ -50,12 +52,13 @@ public class Purger {
         Stack<ArrayList<Message>> deletionBatches = new Stack<>();
 
         AtomicInteger userMessageCount = new AtomicInteger(0);
-        AtomicInteger deletedMessageCount = new AtomicInteger(0);
+        AtomicInteger deletedMessageCount = new AtomicInteger(-1);
         AtomicInteger deletionPercentFinished = new AtomicInteger(0);
         AtomicInteger deletionProgressLogsSent = new AtomicInteger(0);
         AtomicIntegerArray loggerProgressNotifyThresholdsAtomic;
         AtomicBoolean allDeletionsSuccessful;
         boolean logCompletionPercentagePerBatch;
+        RatelimitBucket ratelimitBucket = new RatelimitBucket(this.api, RestEndpoint.MESSAGE_DELETE);
 
 
         try {
@@ -82,7 +85,7 @@ public class Purger {
 
 
         // Distributes user messages to deletion batch arrays.
-        int maxArraySize = 100; // 100
+        int maxArraySize = 100; // 100 for recent message deletion batches
         deletionBatches.push(new ArrayList<>());
         for (Message m : userMessages) {
             if (deletionBatches.peek().size() >= maxArraySize) {
@@ -94,10 +97,11 @@ public class Purger {
         int maxProgressLogCount = 14;
         logCompletionPercentagePerBatch = (userMessageCount.intValue() <= maxArraySize * maxProgressLogCount);
         int[] loggerProgressNotifyThresholds = new int[maxProgressLogCount];
+
         if (!logCompletionPercentagePerBatch) {
             int thresholdMultiplier = (int) ((float) userMessageCount.intValue() / (float) maxProgressLogCount);
-            for (int i = 1; i <= maxProgressLogCount; i++) {
-                loggerProgressNotifyThresholds[i - 1] = thresholdMultiplier * i;
+            for (int i = 0; i < maxProgressLogCount; i++) {
+                loggerProgressNotifyThresholds[i] = thresholdMultiplier * (i);
             }
         }
 
@@ -108,26 +112,33 @@ public class Purger {
             for (ArrayList<Message> a : deletionBatches) {
                 fm.put(c.deleteMessages(a), a.size());
             }
-
             fm.forEach((f, i) -> {
                 try {
                     deletedMessageCount.set(deletedMessageCount.intValue() + i);
 
                     // Periodically log percentage completion.
-                    if (logCompletionPercentagePerBatch ||
-                            deletedMessageCount.intValue() >= (loggerProgressNotifyThresholdsAtomic
-                                    .get(deletionProgressLogsSent.intValue())) ||
-                            deletedMessageCount.intValue() == 0) {
-                        deletionProgressLogsSent.incrementAndGet();
+
+
+                    if (logCompletionPercentagePerBatch) {
                         deletionPercentFinished.set((int) ((((float) deletedMessageCount.intValue()) / ((float) userMessageCount.intValue())) * 100));
                         logger.info("Deletion " + deletionPercentFinished.toString() + "% complete. [Channel: " + c.getName() + "]");
+                    } else if (deletionProgressLogsSent.intValue() < maxProgressLogCount) {
+
+                        if (deletedMessageCount.intValue() >= (loggerProgressNotifyThresholdsAtomic
+                                .get(deletionProgressLogsSent.intValue()))) {
+                            deletionPercentFinished.set((int) ((((float) deletedMessageCount.intValue()) / ((float) userMessageCount.intValue())) * 100));
+                            deletionProgressLogsSent.incrementAndGet();
+//                            deletionPercentFinished.set((int) ((((float) deletedMessageCount.intValue()) / ((float) userMessageCount.intValue())) * 100));
+                            logger.info("Deletion " + deletionPercentFinished.toString() + "% complete. [Channel: " + c.getName() + "]");
+                        }
+
                     }
 
                     f.get();
+                    int timeleft = ratelimitBucket.getTimeTillSpaceGetsAvailable();
+                    System.out.println(timeleft);
                 } catch (InterruptedException | ExecutionException e) {
-                    if (!e.getMessage().equalsIgnoreCase("Unknown Message")) {
-                        e.printStackTrace();
-                    }
+                    logger.warn("Deletion batch interrupted or completed exceptionally.");
 
                 }
                 if (!f.isDone()) {
