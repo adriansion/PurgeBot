@@ -15,7 +15,7 @@ To do:
 - ~~Create emote-based verifier in command channel to command user~~
 - ~~Run Purger channelPurge in separate thread from listener thread~~
 - ~~Delay deletion logs to correspond with deletions~~
-- Consider re-merging old and new message arrays
+- ~~Consider re-merging old and new message arrays~~
 - Build initialization command that reads/collects messages, separate from actual deletion command
 - Get rate limit for deletion directly to time deletion requests
 
