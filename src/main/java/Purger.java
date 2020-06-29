@@ -5,9 +5,7 @@ import org.javacord.api.entity.message.MessageSet;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.lang.reflect.Array;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,147 +40,72 @@ public class Purger {
 
         // The instant at which user joined server.
         Instant instant = c.getServer().getMemberByDiscriminatedName(user).get().getJoinedAtTimestamp(c.getServer()).get();
+
         MessageSet allMessages;
         ArrayList<Message> userMessages = new ArrayList<>();
-        ArrayList<CompletableFuture<Void>> yf = new ArrayList<>(), of = new ArrayList<>();
-        Stack<ArrayList<Message>> messageArrays = new Stack<>();
-        messageArrays.push(new ArrayList<>());
-        int userMessageCount = 0;
-//        AtomicBoolean allCallableDeletionsCompleted = new AtomicBoolean(true);
+        Stack<ArrayList<Message>> deletionBatches = new Stack<>();
 
         try {
 
             // Collects all messages sent to channel since user joined server.
-            logger.info("Collecting channel messages... [Channel: " + c.getName() + "].");
+            logger.info("Collecting channel messages... [Channel: " + c.getName() + "]");
             allMessages = c.getMessagesWhile(m -> m.getCreationTimestamp().compareTo(instant) > 0).get();
             logger.info("Found " + allMessages.size() + " channel messages since the user joined. [Channel: " + c.getName() + "]");
+
 
             // Examines each message and keeps those whose author is the user.
             for (Message m : allMessages) {
                 if (m.getAuthor().getDiscriminatedName().equals(user)) {
                     userMessages.add(m);
-                    userMessageCount++;
                 }
             }
+
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
-        logger.info("Analyzing " + userMessageCount + " messages in " + c.getName() + ".");
+        logger.info(userMessages.size() + " messages will be deleted. [Channel: " + c.getName() + "]");
 
-        // Distributes young messages to young message arrays.
+
+        // Distributes user messages to deletion batch arrays.
+        deletionBatches.push(new ArrayList<>());
         for (Message m : userMessages) {
-            if (messageArrays.peek().size() >= 100) {
-                messageArrays.push(new ArrayList<>());
+            if (deletionBatches.peek().size() >= 100) {
+                deletionBatches.push(new ArrayList<>());
             }
-            messageArrays.peek().add(m);
+            deletionBatches.peek().add(m);
         }
 
-        ArrayList<Boolean> successfulDeletions = new ArrayList<>();
+        AtomicBoolean allDeletionsSuccessful = new AtomicBoolean(true);
         HashMap<CompletableFuture<Void>, Integer> fm = new HashMap<>();
         Runnable task = () -> {
-            for (ArrayList<Message> a : messageArrays) {
+            for (ArrayList<Message> a : deletionBatches) {
                 fm.put(c.deleteMessages(a), a.size());
             }
 
             fm.forEach((f, i) -> {
                 try {
-                    logger.info("Deleting " + i + " message(s)... (bulk)");
+                    logger.info("Deleting batch of " + i + " message(s)...");
                     f.get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
-            });
-
-            fm.forEach((f, i) -> successfulDeletions.add(f.isDone()));
-
-            successfulDeletions.forEach((b) -> {
-                if (!b) {
-                    System.out.println(false);
+                if (!f.isDone()) {
+                    allDeletionsSuccessful.set(false);
                 }
             });
-            logger.info("Deletion concluded in " + c.getName() + ".");
+            if (allDeletionsSuccessful.get()) {
+                logger.info("All deletion batches completely successful in " + c.getName() + ".");
+
+            } else {
+                logger.info("Deletion concluded in " + c.getName() + ", but not all deletion batches were successful.");
+            }
         };
-        ExecutorService executor = Executors.newCachedThreadPool();
+
+        // Only one thread is necessary, since the process' speed will ultimately be limited by Discord rate limits.
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(task);
         executor.shutdown();
 
-
-//        ArrayList<Runnable> runnables = new ArrayList<>();
-//        ExecutorService executor = Executors.newFixedThreadPool(15);
-//        Runnable task = () -> {
-//
-//            for (ArrayList<Message> a : ya) {
-//                runnables.add(() -> {
-//                    logger.info("Deleting " + a.size() + " message(s)... (bulk)");
-//                    c.deleteMessages(a);
-//                });
-//            }
-//            for (Runnable r : runnables) {
-//                executor.execute(r);
-//            }
-//        };
-//
-//        executor.execute(task);
-//        executor.shutdown();
-
-
-//        for (ArrayList<Message> a : ya) {
-//            Runnable log = () -> {
-//                logger.info("Deleting " + a.size() + " message(s)... (bulk)");
-//            };
-//            CompletableFuture<Void> logf = CompletableFuture.runAsync(log); // submit to a thread
-//            yf.add(CompletableFuture.allOf(c.deleteMessages(a), logf));
-//        }
-//
-//        ExecutorService executor = Executors.newFixedThreadPool(4);
-//        ArrayList<Callable<Void>> callables = new ArrayList<>();
-//        yf.forEach((f) -> callables.add(() -> {
-//            f.get();
-//            return null;
-//        }));
-//
-//        try {
-//            for (Future f : executor.invokeAll(callables)) {
-//                if (!f.isDone()) {
-//                    allCallableDeletionsCompleted.set(false);
-//                    break;
-//                }
-//            }
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        if (allCallableDeletionsCompleted.get()) {
-//            logger.info("Deletion successful in " + c.getName() + ".");
-//        } else {
-//            logger.info("Deletion concluded but possibly incomplete in " + c.getName() + ".");
-//        }
-//
-////        return CompletableFuture.allOf(yf.get(1), yf.get(2));
-//
-//
-////        // Deletes applicable messages from channel.
-////        return CompletableFuture.runAsync(() ->
-////
-////        {
-////            // Deletes young messages
-////            for (ArrayList<Message> a : ya) {
-//////                c.bulkDelete(a).thenAccept((del) -> logger.info("Deletion count: " + a.size() + " (bulk)"));
-////
-//////                CompletableFuture<Void> future = c.bulkDelete(a);
-////                CompletableFuture<Void> future = c.deleteMessages(a);
-////                try {
-////                    future.get();
-////                    logger.info("Deletion count: " + a.size() + " (bulk)");
-////                } catch (InterruptedException | ExecutionException e) {
-////                    e.printStackTrace();
-////                }
-////            }
-////
-////            // Deletes old messages
-//////            for (ArrayList<Message> a : oa) {
-//////                c.deleteMessages(a).thenAccept((del) -> logger.info("Deletion count: " + a.size()));
-//////            }
-////        });
     }
 }

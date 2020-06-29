@@ -18,6 +18,7 @@ To do:
 - ~~Consider re-merging old and new message arrays~~
 - Build initialization command that reads/collects messages, separate from actual deletion command
 - Get rate limit for deletion directly to time deletion requests
+- Change batch deletion logs to give percent of completion
 
 Known Issues:
 - 
